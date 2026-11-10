@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>402 SWEG Software Metrics</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to content</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="#/overview">
+        <span class="brand__mark" aria-hidden="true">▤</span>
+        <span><span id="brand-title" class="brand__title"></span><span id="brand-org" class="brand__org"></span></span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="#/overview" data-route="overview">Overview</a>
+        <a id="team-link" href="#/team" data-route="team">Teams</a>
+        <a href="#/framework" data-route="framework">KPI framework</a>
+      </nav>
+      <label class="range-field">Time range
+        <select id="range" data-action="range"></select>
+      </label>
+    </div>
+  </header>
+
+  <p id="sample-banner" class="banner" role="note">
+    <strong>Sample data.</strong> All numbers are made up for this prototype. Metrics are team level only.
+  </p>
+
+  <main id="app" class="container" tabindex="-1"></main>
+
+  <!-- Load order matters: settings, KPIs, your data, then the app. -->
+  <script src="js/config.js"></script>
+  <script src="js/kpis.js"></script>
+  <script src="data/team-data.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

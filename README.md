@@ -66,9 +66,14 @@ Weekly deliverables are due Sundays at 11:59 PM in GeorgiaView. Final deliverabl
 
 Each recommended KPI needs: **KPI** (name and definition) · **Formula** (with units) · **Data source** · **Question it answers** · **Benchmark or target** · **Risk of gaming**. Balance the set across speed, quality, stability, and team health, and pair every speed metric with a quality metric.
 
+## Dashboard prototype
+
+Open `dashboard/index.html` in a browser. All content (KPIs, teams, targets, numbers) lives in a few data files, so the dashboard updates when the framework changes. See [`dashboard/README.md`](dashboard/README.md).
+
 ## Repo layout
 
 ```
+dashboard/               Clickable HTML prototype (open dashboard/index.html)
 docs/                    Original instructions and charter
 01-research/             PO interview, survey, current practice, comparables, personas, journey map
 02-kpi-framework/        Candidate catalog, framework table, rejected metrics
