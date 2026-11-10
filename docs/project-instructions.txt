@@ -1,0 +1,193 @@
+CBIS 4230 / CBIS 5230  Final Project Instructions
+Overview
+Three teams will compete to design the best software development metrics dashboard for the 402 Software Engineering Group (402 SWEG). The project runs from Thursday, October 29 to Thursday, December 3, the day of the final presentations. All three teams work on the same brief with the same Product Owner, who will select the winning solution.
+The project combines UX research and design with agile project management. Your team will find out what project managers and team leaders need to see, decide which metrics are worth tracking, design a dashboard that shows them clearly, and test it with users. You will organize the work in three sprints.
+Item
+Amount
+Product Owner meetings
+1 joint kickoff (all teams), 2 sprint reviews per team, final presentation
+Survey
+1 shared survey, built from all three teams' questions
+Comparable dashboards reviewed
+3
+KPI framework
+6 to 10 recommended team-level KPIs
+Personas / journey maps
+2 / 1
+Wireframes
+4 to 6 dashboard views
+Prototype
+Fully functional, with all selected KPIs and sample data
+Guerrilla usability tests
+5 per team
+Final report
+15 to 20 pages
+Final presentation
+15 minutes + 5 minutes Q&A, Thu Dec 3
+
+What you will learn: how to research users in a real organization, turn a vague goal into measurable KPIs, design a data dashboard people can read at a glance, test it, and run agile sprints with a real client.
+The client and the problem
+402 SWEG wants a central dashboard that shows leadership how its software teams are performing and how that performance changes over time. Here is how the Product Owner describes the project:
+To provide visibility to leadership and track performance trends, the 402 Software Engineering Group (SWEG) is interested in developing and maintaining a central dashboard for software development metrics. The dashboard should provide quick-glance data on measurable benchmarks and key performance indicators (KPIs) for project managers and team leaders to assess the team performance (team-level, not individual level). Ultimately, the data in the dashboard should reveal performance trends and inform changes in productivity/efficiency.
+Our main issue on this project has been developing the KPIs and other metrics that might be useful. For example, we can easily track the number of software lines that a developer produced, but this metric does not correlate at all to the quality, efficiency, or overall usefulness of the software. Some potential metrics that we can produce are: burndown charts, CI/CD pipeline pass/fail rates, and unit test code coverage percentages.
+What this means for your team
+	•	The metrics are the hardest part. Choosing the right KPIs is the Product Owner's main problem. A beautiful dashboard showing the wrong numbers will not win.
+	•	Team level only. The dashboard measures teams, never individual developers. Do not design rankings, leaderboards, or per-person views.
+	•	Avoid vanity metrics. Lines of code is the Product Owner's own example of a number that is easy to count but says nothing about quality or usefulness. Every KPI you propose must explain what decision it helps someone make.
+	•	Quick glance, then trends. Users should understand the current state in seconds, then be able to look at trends over time.
+	•	Two audiences. Project managers and team leaders use the dashboard to assess their teams; leadership uses it for visibility across teams.
+Teams, roles, and routine
+The instructor forms three teams on Oct 29. Every member does research, design, and testing; the roles below decide who leads each area.
+Role
+Responsibilities
+Scrum Master (rotates among Double Bobcat students each sprint)
+Runs sprint planning and retrospectives, keeps the Trello board current, removes blockers, and is the team's contact for the instructor and Product Owner that sprint
+Developers
+Other students in the team
+
+Agile routine
+Event
+How
+When
+Sprint planning
+In class, 20 minutes: review the backlog, choose user stories, set the sprint goal, assign tasks in Trello
+First class of each sprint
+Standups
+Led by the Scrum Master: what I finished, what I'm doing next, any blockers (at the beginning of each class during a Sprint)
+Twice a week
+Sprint review
+With the Product Owner, 15 minutes per team: demo your work, get feedback, reorder the backlog
+End of Sprints 1 and 2
+Retrospective
+In class, 15 minutes: what went well, what to improve, 1 to 3 action items
+End of Sprints 1 and 2
+Peer evaluation
+Confidential form
+End of each sprint
+
+Peer evaluations can lower an individual's grade on team work by up to 15%.
+Schedule and deliverables
+The project has three sprints. Weekly deliverables are due Sunday at 11:59 PM in GeorgiaView, one submission per team. Final deliverables are due Thursday, Dec 3, before class.
+Sprint
+Dates
+Focus
+1. Discovery and metrics
+Thu Oct 29 to Sun Nov 8
+Kickoff, Product Owner interview, survey, comparable dashboards, candidate KPIs
+2. Design and prototype
+Mon Nov 9 to Sun Nov 22
+Survey analysis, personas, KPI framework, dashboard structure, wireframes, prototype
+3. Test and refine
+Mon Nov 23 to Thu Dec 3
+Guerrilla testing, refined prototype, final report, final presentation
+
+Thanksgiving falls on Thursday, Nov 26. Plan your Sprint 3 testing around it.
+Product Owner meetings
+Meeting
+When
+Purpose
+1. Joint kickoff interview (all teams)
+Thursday October 15. Additional questions could be submitted Week 1 or 2 
+Learn goals, users, current tracking practices, data sources, and constraints; approve the shared survey
+2. Sprint 1 review (each team)
+Week of Nov 9
+Present research findings and candidate KPIs; the Product Owner reorders priorities
+3. Sprint 2 review (each team)
+Mon Nov 23 or Tue Nov 24
+Walk through the prototype and get feedback before testing
+4. Final presentations
+Thu Dec 3
+Present your solution; the Product Owner selects the winner
+
+Due dates
+Due
+Deliverables
+Sun Nov 1
+Project Charter (roles, Scrum Master rotation, team agreement, schedule, top 5 risks); additional kickoff interview questions for Dexter; 8 to 10 draft survey questions
+Sun Nov 8 (end of Sprint 1)
+Kickoff interview summary; current practice analysis (how 402 SWEG tracks performance today and what is missing); comparable dashboards review (3 dashboards); candidate KPI catalog (12 to 15 candidates); product backlog draft in Trello; peer evaluation
+Sun Nov 15
+Survey results analysis; 2 personas; 1 journey map (for example, a team leader preparing for a leadership review); KPI framework, first version
+Sun Nov 22 (end of Sprint 2)
+Dashboard structure (views and drill-downs); annotated wireframes (4 to 6 views); design system with an accessible chart palette; fully functional prototype in Figma (all selected KPIs, sample data); guerrilla testing plan; updated backlog; peer evaluation
+Thu Dec 3, before class (end of Sprint 3)
+Guerrilla testing report; refined prototype; final KPI framework; implementation plan; final report; presentation slides; final backlog; peer evaluation
+Research and metrics guidance
+Shared survey
+	•	Each team submits 8 to 10 draft questions by Sun Nov 1. The instructor merges them into one survey of about 15 questions, and the Product Owner approves and distributes it to project managers and team leaders.
+	•	One survey spares the client from answering three. The survey closes Thu Nov 12, and every team receives the same anonymized responses on Fri Nov 13.
+	•	Good topics: what decisions users make about their teams, what information they lack today, which metrics they already watch, how often they would check a dashboard, what devices they use, and concerns about how metrics might be misused.
+Comparable dashboards review
+Review 3 existing engineering-metrics dashboards. Compare them on the same criteria: which metrics they show, how they show trends, how fast you can read them, and what you would borrow or avoid.
+Building the KPI framework
+Start from established frameworks instead of inventing metrics from scratch. Research at least these two:
+	•	DORA metrics: deployment frequency, lead time for changes, change failure rate, and time to restore service.
+	•	SPACE framework: satisfaction and well-being, performance, activity, communication and collaboration, and efficiency and flow.
+Also consider the metrics the Product Owner named: burndown charts, CI/CD pipeline pass and fail rates, and unit test code coverage. Then narrow your 12 to 15 candidates down to 6 to 10 recommended KPIs. Document each one in a table with these columns:
+Column
+What to write
+KPI
+Name and one-line definition
+Formula
+How it is calculated, with units
+Data source
+Where the data would come from (for example, Trello or the CI/CD pipeline)
+Question it answers
+The decision it helps a team leader or manager make
+Benchmark or target
+What "good" looks like and where that comes from
+Risk of gaming
+How the number could be inflated without real improvement, and how you would guard against it
+
+Balance your set across speed, quality, stability, and team health. A team that ships fast but breaks things should not look good on your dashboard.
+Prototype requirements
+Your Figma prototype must fully satisfy the Product Owner's stated requirements. It is not a set of sample screens: it must work as a complete dashboard.
+	•	Fully functional. Every view, filter, menu, and drill-down works. A user can explore the whole dashboard without hitting dead ends.
+	•	All selected KPIs. Every KPI in your framework appears in the prototype, with realistic sample data, its current value, and its trend over time.
+	•	Quick glance, then trends. Leadership and team leaders see the current status in seconds and can drill down into trends by team and time period.
+	•	Team level only. No individual developer data, rankings, or leaderboards.
+	•	Accessible. Text and chart colors meet WCAG 2.2 AA contrast, meaning never relies on color alone, charts have clear labels and legends, and text is readable at normal size.
+	•	User-friendly. Clear labels in the users' language, a consistent layout, and short explanations of what each KPI means. Usability testing must show that users can answer their key questions quickly.
+
+Guerrilla usability testing
+	•	Run 5 sessions per team, 10 to 15 minutes each, with 3 short tasks drawn from your personas.
+	•	Real users are best: ask the instructor whether the Product Owner can arrange 1 or 2 project managers or team leaders. Otherwise, test with people who have project management or software team experience.
+	•	Test whether users can answer real questions quickly, such as: "Is this team's quality getting better or worse?"
+Final report and presentation
+Final report (15 to 20 pages, not counting appendices; due Thu Dec 3, before class)
+Section
+What to include
+Pages
+1. Executive summary
+The problem, your recommended KPIs, the dashboard, and key test results
+1
+2. Introduction
+Goals, scope, 402 SWEG's context and challenges, your methods
+1 to 2
+3. Research
+Product Owner insights, current practice analysis, survey findings, personas, journey map, comparable dashboards
+3 to 4
+4. KPI framework
+Your recommended KPIs in the framework table, why you chose them, and the metrics you rejected and why
+3 to 4
+5. Dashboard design
+Structure, design system, prototype walkthrough with screenshots, key design decisions
+3 to 4
+6. Usability testing
+How you tested, problems ranked by severity, what you changed
+1 to 2
+7. Implementation plan
+Phased rollout, data each phase needs, how 402 SWEG would maintain the dashboard, success measures
+1 to 2
+8. Agile reflection
+Sprint goals versus results, scope changes, risks, retrospective actions
+1
+Appendices
+Survey questions and results, test script, meeting summaries, product backlog
+No limit
+
+Final presentation (Thu Dec 3, 15 minutes + 5 minutes Q&A)
+	•	Present to the Product Owner, the instructor, and the class. Every team member presents.
+	•	Cover the problem, your KPI framework, a live demo of the prototype, your test results, and your top recommendations.
+	•	Teams present in an order drawn by lot. Submit slides before class.
+	•	The Product Owner announces the winning team at the end of the session or shortly after.
