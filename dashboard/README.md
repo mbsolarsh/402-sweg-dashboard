@@ -57,7 +57,7 @@ Each KPI has a `direction` (`higher` or `lower` is better), a `target` and a `wa
 - **Status is never color alone.** Every status has an icon and a word; team lines differ by dash pattern and have end labels; the comparison chart has a "Show the numbers" table.
 - **Honest charts.** Bars start at zero, lines are never smoothed, and every chart shows its target.
 - **Speed is paired with quality.** Each KPI names its balancing metric (`pairedWith`).
-- **Contrast.** Text and line colors are chosen for WCAG 2.2 AA on white.
+- **Contrast.** Text and chart colors are chosen for WCAG 2.2 AA in both the dark and light themes.
 
 ## Files
 
