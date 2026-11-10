@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,28 +9,36 @@
 <body>
   <a class="skip-link" href="#app">Skip to content</a>
 
-  <header class="topbar">
-    <div class="topbar__inner">
-      <a class="brand" href="#/overview">
-        <span class="brand__mark" aria-hidden="true">▤</span>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#/dashboard">
+        <span class="brand__mark" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28"><rect x="3" y="14" width="5" height="11" rx="1"/><rect x="11.5" y="8" width="5" height="17" rx="1"/><rect x="20" y="3" width="5" height="22" rx="1"/></svg>
+        </span>
         <span><span id="brand-title" class="brand__title"></span><span id="brand-org" class="brand__org"></span></span>
       </a>
-      <nav class="nav" aria-label="Main">
-        <a href="#/overview" data-route="overview">Overview</a>
-        <a id="team-link" href="#/team" data-route="team">Teams</a>
-        <a href="#/framework" data-route="framework">KPI framework</a>
+
+      <nav class="side-nav" aria-label="Main">
+        <p class="side-nav__label">Dashboard</p>
+        <ul>
+          <li><a href="#/dashboard" data-route="dashboard" data-team="">All teams</a></li>
+        </ul>
+        <p class="side-nav__label">Teams</p>
+        <ul id="team-links"></ul>
+        <p class="side-nav__label">Reference</p>
+        <ul>
+          <li><a href="#/framework" data-route="framework">KPI framework</a></li>
+        </ul>
       </nav>
-      <label class="range-field">Time range
-        <select id="range" data-action="range"></select>
-      </label>
-    </div>
-  </header>
 
-  <p id="sample-banner" class="banner" role="note">
-    <strong>Sample data.</strong> All numbers are made up for this prototype. Metrics are team level only.
-  </p>
+      <div class="sidebar__foot">
+        <button id="theme-btn" class="btn" type="button" data-action="theme">Switch to light mode</button>
+        <p id="sample-note" class="sample-note" role="note"><strong>Sample data.</strong> All numbers in this prototype are made up.</p>
+      </div>
+    </aside>
 
-  <main id="app" class="container" tabindex="-1"></main>
+    <main id="app" class="main" tabindex="-1"></main>
+  </div>
 
   <!-- Load order matters: settings, KPIs, your data, then the app. -->
   <script src="js/config.js"></script>

@@ -1,12 +1,15 @@
 /*
- * Small, dependency-free SVG charts.
- *   DashCharts.sparkline(values, { target })        -> tiny trend line for cards
- *   DashCharts.lineChart({ labels, series, target, format, title })
- *        series: [{ name, values, color, dash, width }]
+ * Dependency-free SVG charts. All colors come from CSS classes, so the
+ * charts follow the dark/light theme automatically.
  *
- * Accessibility: lines differ by dash pattern and carry end labels, not
- * just color. The full chart has a text title, and the app adds a data
- * table under each chart.
+ *   DashCharts.barTrend({ labels, values, target, targetLabel, format, title, ceil })
+ *     One KPI over time: a bar per sprint (one neutral color: bar color
+ *     carries no meaning), a dashed target line and a dotted linear trend
+ *     line. Bars always start at zero so heights stay honest.
+ *
+ *   DashCharts.lineChart({ labels, series, target, targetLabel, format, title, floor, ceil })
+ *     Several teams on one KPI. series: [{ name, values, cls, dash, width }]
+ *     Straight segments only (no smoothing), end labels on every line.
  */
 (function () {
   'use strict';
@@ -16,10 +19,11 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  function nums(arr) { return arr.filter(function (v) { return v != null && !isNaN(v); }); }
+  function isNum(v) { return v != null && !isNaN(v); }
+  function nums(arr) { return arr.filter(isNum); }
 
   function niceTicks(min, max, count) {
-    if (min === max) { min -= 1; max += 1; }
+    if (min === max) { max = min + 1; }
     var span = max - min;
     var step = Math.pow(10, Math.floor(Math.log10(span / count)));
     var err = (span / count) / step;
@@ -30,104 +34,126 @@
     return ticks;
   }
 
-  function sparkline(values, opts) {
-    opts = opts || {};
-    var w = 120, h = 32, pad = 3;
-    var v = nums(values);
-    if (v.length < 2) return '';
-    var all = opts.target != null ? v.concat([opts.target]) : v;
-    var min = Math.min.apply(null, all), max = Math.max.apply(null, all);
-    if (min === max) { min -= 1; max += 1; }
-    var x = function (i) { return pad + i * (w - pad * 2) / (values.length - 1); };
-    var y = function (val) { return h - pad - (val - min) / (max - min) * (h - pad * 2); };
-    var pts = [], last = null;
-    values.forEach(function (val, i) {
-      if (val == null) return;
-      pts.push(x(i).toFixed(1) + ',' + y(val).toFixed(1));
-      last = [x(i), y(val)];
-    });
-    var target = opts.target != null
-      ? '<line class="spark-target" x1="0" x2="' + w + '" y1="' + y(opts.target).toFixed(1) + '" y2="' + y(opts.target).toFixed(1) + '"/>'
-      : '';
-    return '<svg class="spark" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true" focusable="false">' +
-      target +
-      '<polyline class="spark-line" points="' + pts.join(' ') + '"/>' +
-      '<circle class="spark-dot" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.5"/>' +
-      '</svg>';
+  // Least-squares line through the non-empty points.
+  function fit(values) {
+    var xs = [], ys = [];
+    values.forEach(function (v, i) { if (isNum(v)) { xs.push(i); ys.push(v); } });
+    if (xs.length < 3) return null;
+    var n = xs.length, sx = 0, sy = 0, sxy = 0, sxx = 0;
+    for (var i = 0; i < n; i++) { sx += xs[i]; sy += ys[i]; sxy += xs[i] * ys[i]; sxx += xs[i] * xs[i]; }
+    var d = n * sxx - sx * sx;
+    if (!d) return null;
+    var slope = (n * sxy - sx * sy) / d;
+    return { slope: slope, at: function (x) { return (sy - slope * sx) / n + slope * x; } };
   }
 
-  var uid = 0;
-  function lineChart(o) {
-    var W = 760, H = 320, m = { t: 20, r: 128, b: 40, l: 64 };
+  function targetLine(x1, x2, y, label) {
+    return '<line class="target" x1="' + x1 + '" x2="' + x2 + '" y1="' + y + '" y2="' + y + '"/>' +
+      (label ? '<text class="target-label" x="' + (x2 - 2) + '" y="' + (y - 5) + '" text-anchor="end">' + esc(label) + '</text>' : '');
+  }
+
+  function barTrend(o) {
+    var W = 640, H = 168, m = { t: 18, r: 10, b: 26, l: 54 };
     var iw = W - m.l - m.r, ih = H - m.t - m.b;
-    var fmt = o.format || function (v) { return String(v); };
+    var fmt = o.format || String;
+    var vals = nums(o.values);
+    if (!vals.length) return '<p class="empty">No data for this period.</p>';
+    var max = Math.max.apply(null, vals.concat(isNum(o.target) ? [o.target] : []));
+    var hi = max * 1.12;
+    if (o.ceil != null) hi = Math.min(o.ceil, hi);
+    var ticks = niceTicks(0, hi, 3);
+    hi = ticks[ticks.length - 1];
+    var n = o.values.length, slot = iw / n, bw = Math.min(42, slot * 0.62);
+    var cx = function (i) { return m.l + slot * i + slot / 2; };
+    var y = function (v) { return m.t + ih - (v / hi) * ih; };
+    var out = ['<svg class="chart-svg chart-svg--bars" viewBox="0 0 ' + W + ' ' + H + '" role="img"><title>' + esc(o.title || '') + '</title>'];
+
+    ticks.forEach(function (t) {
+      out.push('<line class="grid" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(t) + '" y2="' + y(t) + '"/>');
+      out.push('<text class="tick" x="' + (m.l - 8) + '" y="' + (y(t) + 4) + '" text-anchor="end">' + esc(fmt(t)) + '</text>');
+    });
+    var every = n > 8 ? 2 : 1;
+    o.values.forEach(function (v, i) {
+      if (isNum(v)) {
+        var top = y(v), last = i === n - 1;
+        out.push('<rect class="bar' + (last ? ' bar--latest' : '') + '" x="' + (cx(i) - bw / 2) + '" y="' + top + '" width="' + bw + '" height="' + Math.max(0, m.t + ih - top) + '" rx="2">' +
+          '<title>' + esc(o.labels[i] + ': ' + fmt(v)) + '</title></rect>');
+      }
+      if (!((n - 1 - i) % every)) {
+        out.push('<text class="tick" x="' + cx(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(o.labels[i]) + '</text>');
+      }
+    });
+    out.push('<line class="axis" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + (m.t + ih) + '" y2="' + (m.t + ih) + '"/>');
+
+    var f = fit(o.values);
+    if (f) {
+      out.push('<line class="trendline" x1="' + cx(0) + '" x2="' + cx(n - 1) + '" y1="' + y(Math.max(0, f.at(0))) + '" y2="' + y(Math.max(0, f.at(n - 1))) + '"/>');
+    }
+    if (isNum(o.target)) out.push(targetLine(m.l, W - m.r, y(o.target), o.targetLabel));
+    out.push('</svg>');
+    return out.join('');
+  }
+
+  function lineChart(o) {
+    var W = 760, H = 320, m = { t: 22, r: 130, b: 40, l: 64 };
+    var iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var fmt = o.format || String;
     var all = [];
     o.series.forEach(function (s) { all = all.concat(nums(s.values)); });
-    if (o.target != null) all.push(o.target);
+    if (isNum(o.target)) all.push(o.target);
     if (!all.length) return '<p class="empty">No data for this selection.</p>';
     var min = Math.min.apply(null, all), max = Math.max.apply(null, all);
-    var padv = (max - min) * 0.1 || 1;
-    var lo = o.floor != null ? Math.max(o.floor, min - padv) : min - padv;
-    var hi = o.ceil != null ? Math.min(o.ceil, max + padv) : max + padv;
+    var pad = (max - min) * 0.12 || 1;
+    var lo = min - pad, hi = max + pad;
+    if (o.floor != null) lo = Math.max(o.floor, lo);
+    if (o.ceil != null) hi = Math.min(o.ceil, hi);
     var ticks = niceTicks(lo, hi, 5);
     lo = ticks[0]; hi = ticks[ticks.length - 1];
     var n = o.labels.length;
     var x = function (i) { return m.l + (n === 1 ? iw / 2 : i * iw / (n - 1)); };
     var y = function (v) { return m.t + ih - (v - lo) / (hi - lo) * ih; };
-    var id = 'chart-' + (++uid);
-    var out = [];
+    var out = ['<svg class="chart-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img"><title>' + esc(o.title || '') + '</title>'];
 
-    out.push('<svg class="chart-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-labelledby="' + id + '-t">');
-    out.push('<title id="' + id + '-t">' + esc(o.title || 'Trend chart') + '</title>');
-
-    // grid + y axis
     ticks.forEach(function (t) {
       out.push('<line class="grid" x1="' + m.l + '" x2="' + (m.l + iw) + '" y1="' + y(t) + '" y2="' + y(t) + '"/>');
       out.push('<text class="tick" x="' + (m.l - 8) + '" y="' + (y(t) + 4) + '" text-anchor="end">' + esc(fmt(t)) + '</text>');
     });
-    // x labels (thin out when crowded)
     var every = n > 8 ? 2 : 1;
     o.labels.forEach(function (lab, i) {
       if ((n - 1 - i) % every) return;
       out.push('<text class="tick" x="' + x(i) + '" y="' + (H - m.b + 20) + '" text-anchor="middle">' + esc(lab) + '</text>');
     });
     out.push('<line class="axis" x1="' + m.l + '" x2="' + (m.l + iw) + '" y1="' + (m.t + ih) + '" y2="' + (m.t + ih) + '"/>');
+    if (isNum(o.target)) out.push(targetLine(m.l, m.l + iw, y(o.target), o.targetLabel));
 
-    // target line
-    if (o.target != null) {
-      var ty = y(o.target);
-      out.push('<line class="target" x1="' + m.l + '" x2="' + (m.l + iw) + '" y1="' + ty + '" y2="' + ty + '"/>');
-      out.push('<text class="target-label" x="' + (m.l + iw - 4) + '" y="' + (ty + 16) + '" text-anchor="end">' + esc(o.targetLabel || ('Target ' + fmt(o.target))) + '</text>');
-    }
-
-    // series
     var ends = [];
     o.series.forEach(function (s) {
       var pts = [], lastI = -1;
-      s.values.forEach(function (v, i) { if (v != null) { pts.push(x(i) + ',' + y(v)); lastI = i; } });
+      s.values.forEach(function (v, i) { if (isNum(v)) { pts.push(x(i) + ',' + y(v)); lastI = i; } });
       if (!pts.length) return;
-      out.push('<polyline class="series" points="' + pts.join(' ') + '" stroke="' + s.color + '" stroke-width="' + (s.width || 2.25) + '"' +
+      out.push('<polyline class="series ' + s.cls + '" points="' + pts.join(' ') + '" stroke-width="' + (s.width || 2.25) + '"' +
         (s.dash ? ' stroke-dasharray="' + s.dash + '"' : '') + '/>');
       s.values.forEach(function (v, i) {
-        if (v == null) return;
-        out.push('<circle class="pt" cx="' + x(i) + '" cy="' + y(v) + '" r="3.5" fill="' + s.color + '"><title>' +
+        if (!isNum(v)) return;
+        out.push('<circle class="pt ' + s.cls + '" cx="' + x(i) + '" cy="' + y(v) + '" r="3.5"><title>' +
           esc(s.name + ', ' + o.labels[i] + ': ' + fmt(v)) + '</title></circle>');
       });
-      ends.push({ name: s.name, color: s.color, y: y(s.values[lastI]), x: x(lastI) });
+      ends.push({ name: s.name, cls: s.cls, y: y(s.values[lastI]) });
     });
-
-    // end labels, nudged so they never overlap
     ends.sort(function (a, b) { return a.y - b.y; });
-    for (var i = 1; i < ends.length; i++) {
-      if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
-    }
+    for (var i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
     ends.forEach(function (e) {
-      out.push('<text class="end-label" x="' + (m.l + iw + 10) + '" y="' + (e.y + 4) + '" fill="' + e.color + '">' + esc(e.name) + '</text>');
+      out.push('<text class="end-label ' + e.cls + '" x="' + (m.l + iw + 10) + '" y="' + (e.y + 4) + '">' + esc(e.name) + '</text>');
     });
-
     out.push('</svg>');
     return out.join('');
   }
 
-  window.DashCharts = { sparkline: sparkline, lineChart: lineChart, esc: esc };
+  // Small legend swatches used above charts.
+  function swatch(kind, cls, dash) {
+    if (kind === 'bar') return '<svg width="14" height="12" aria-hidden="true"><rect class="bar" x="1" y="1" width="12" height="10" rx="2"/></svg>';
+    return '<svg width="28" height="10" aria-hidden="true"><line class="' + cls + '" x1="1" x2="27" y1="5" y2="5"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') + '/></svg>';
+  }
+
+  window.DashCharts = { barTrend: barTrend, lineChart: lineChart, swatch: swatch, esc: esc };
 })();

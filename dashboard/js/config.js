@@ -26,9 +26,9 @@ window.DASH_CONFIG = {
   periods: {
     label: 'Sprint',            // what one period is called
     lengthDays: 14,
-    count: 12,                  // how many periods of history to generate
+    count: 24,                  // periods of history (2x the longest range, so "vs previous" works)
     lastPeriodEnd: '2026-11-20',
-    firstNumber: 31             // number of the oldest sprint shown
+    firstNumber: 19             // number of the oldest sprint generated
   },
 
   // Time-range filter in the header.
@@ -48,16 +48,12 @@ window.DASH_CONFIG = {
     { id: 'health',    label: 'Team health and collaboration', blurb: 'Whether the pace is sustainable.' }
   ],
 
-  // Colors for team lines in charts. Each passes WCAG AA (4.5:1) on white,
-  // and every line also gets its own dash pattern and an end label, so
-  // color is never the only cue.
-  seriesStyles: [
-    { color: '#0B5FA5', dash: '' },
-    { color: '#A34700', dash: '6 3' },
-    { color: '#1A7346', dash: '2 3' },
-    { color: '#7B3FA0', dash: '10 3 2 3' },
-    { color: '#4D4D4D', dash: '4 4' },
-    { color: '#8A1C4A', dash: '1 2' }
-  ],
-  groupStyle: { color: '#111111', dash: '', width: 3.5 }
+  // Line styles for teams in comparison charts. Colors come from the
+  // --s1 ... --s6 tokens in styles.css (separate values for dark and light
+  // themes). Every line also has its own dash pattern and an end label,
+  // so color is never the only cue.
+  seriesDashes: ['', '7 4', '2 4', '10 3 2 3', '4 4', '1 3'],
+
+  // 'dark' or 'light'. Viewers can switch with the button in the sidebar.
+  defaultTheme: 'dark'
 };
