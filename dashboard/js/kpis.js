@@ -13,8 +13,8 @@
  *   audience     who sees it: 'leadership' (high-level view) and/or 'teamlead'.
  *                Leadership shows only the Product Owner's top 3, ordered by leadershipRank.
  *   enabled      true = shown on the dashboard. Set false for metrics you
- *                considered and rejected (they appear under "Considered,
- *                not selected" on the Framework page with rejectedReason).
+ *                considered and rejected. They are hidden from the dashboard;
+ *                rejectedReason is kept here for the record.
  *   category     one of the ids in config.js categories
  *   unit         percent | days | hours | perWeek | count | score
  *   direction    higher | lower (which way is better) | neutral (no "good")

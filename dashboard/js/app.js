@@ -153,7 +153,7 @@
         '<option value="prev"' + (state.compare === 'prev' ? ' selected' : '') + '>Previous ' + range().count + ' sprints</option>' +
         '<option value="none"' + (state.compare === 'none' ? ' selected' : '') + '>No comparison</option>' +
       '</select></label>' +
-      '<p class="filters__note">' + esc(periodSpan()) + '<br><span class="muted">Team-level data only. There are no per-person filters.</span></p>' +
+      '<p class="filters__note">' + esc(periodSpan()) + '</p>' +
       '</div>';
   }
 
@@ -170,8 +170,6 @@
     opts = opts || {};
     var s = stats(k, teamId);
     var p = parts(k, s.cur);
-    var pair = k.pairedWith && kpiById[k.pairedWith];
-    var q = viewQuery(teamId, opts.view);
     var ps = windowPeriods();
     var chart = CH.barTrend({
       labels: ps.map(function (x) { return x.short; }),
@@ -186,22 +184,19 @@
       ? (s.cmp ? '<p class="cmp cmp--' + s.cmp.key + '"><span aria-hidden="true">' + s.cmp.arrow + '</span> <strong>' + s.cmp.label + '</strong> <span class="muted">' + esc(s.cmp.text) + '</span></p>'
                : '<p class="cmp muted">No earlier data to compare</p>')
       : '';
-    var latest = s.latest ? 'Latest (' + ps[s.latest.i].short + '): ' + fmt(k, s.latest.v) : 'No recent data';
 
     return '<article class="kpi-row kpi-row--' + s.status.key + '" aria-labelledby="row-' + k.id + '">' +
       '<div class="kpi-row__info">' +
         (opts.noLink
           ? '<h3 id="row-' + k.id + '">' + esc(k.name) + '</h3>'
-          : '<h3 id="row-' + k.id + '"><a href="#/kpi/' + k.id + q + '">' + esc(k.name) + '</a></h3>') +
+          : '<h3 id="row-' + k.id + '"><a href="#/kpi/' + k.id + viewQuery(teamId, opts.view) + '">' + esc(k.name) + '</a></h3>') +
         '<p class="def">' + esc(k.definition) + '</p>' +
-        (pair ? '<p class="pair">Balanced by <a href="#/kpi/' + pair.id + q + '">' + esc(pair.name) + '</a></p>' : '') +
-        (opts.noLink ? '' : '<a class="more" href="#/kpi/' + k.id + q + '">Compare teams and details <span aria-hidden="true">→</span></a>') +
       '</div>' +
       '<div class="kpi-row__value">' +
         '<div class="tile-head"><span class="eyebrow">Avg · ' + esc(range().label.toLowerCase()) + '</span>' + badge(s.status) + '</div>' +
         '<p class="big"><span class="big__num">' + esc(p.num) + '</span>' + (p.unit ? '<span class="big__unit">' + esc(p.unit) + '</span>' : '') + '</p>' +
         cmp +
-        '<p class="ctx">' + esc(latest) + ' · ' + esc(targetText(k)) + '</p>' +
+        '<p class="ctx">' + esc(targetText(k)) + '</p>' +
       '</div>' +
       '<div class="kpi-row__chart">' + chart + '</div>' +
       '</article>';
@@ -258,7 +253,6 @@
           '<p class="muted">' + C.teams.length + ' teams combined. Are we doing the work we want to do, effectively?</p>' +
         '</header>' +
         filterBar(null, { hideTeam: true }) +
-        summary(null, list) +
         teamsMatrix(list) +
         chartLegend() +
         '<section class="cat" aria-labelledby="top-h"><div class="cat__head"><h2 id="top-h">Top ' + list.length + ' KPIs</h2>' +
@@ -362,20 +356,16 @@
 
   function viewFramework() {
     var cols = ['KPI', 'Formula', 'Data source', 'Question it answers', 'Benchmark or target', 'Risk of gaming'];
-    var rejected = ALL.filter(function (k) { return k.enabled === false; });
     function catName(k) { var c = C.categories.find(function (x) { return x.id === k.category; }); return c ? c.label : ''; }
     return '<header class="page-head"><p class="crumbs">Reference</p><h1 tabindex="-1">KPI framework</h1>' +
-      '<p class="muted">' + KPIS.length + ' recommended KPIs, balanced across speed, quality, stability and team health. Leadership sees the top ' + kpisFor('leadership').length + '; team leads see all of them. All are measured per team, never per person.</p></header>' +
+      '<p class="muted">' + KPIS.length + ' recommended KPIs, balanced across speed, quality, stability and team health. All are measured per team, never per person.</p></header>' +
       '<section class="panel"><div class="table-wrap" tabindex="0" role="region" aria-label="KPI framework"><table class="framework"><thead><tr>' +
       cols.map(function (c) { return '<th scope="col">' + c + '</th>'; }).join('') + '</tr></thead><tbody>' +
       KPIS.map(function (k) {
-        return '<tr><th scope="row"><a href="#/kpi/' + k.id + '">' + esc(k.name) + '</a><span class="tag">' + esc(catName(k)) + '</span><span class="tag">' + (inView(k, 'leadership') ? 'Leadership + team lead' : 'Team lead') + '</span><span class="small">' + esc(k.definition) + '</span></th>' +
+        return '<tr><th scope="row"><a href="#/kpi/' + k.id + '">' + esc(k.name) + '</a><span class="tag">' + esc(catName(k)) + '</span><span class="small">' + esc(k.definition) + '</span></th>' +
           '<td>' + esc(k.formula) + '</td><td>' + esc(k.dataSource) + '</td><td>' + esc(k.question) + '</td>' +
           '<td><strong>' + esc(targetText(k)) + '</strong><br><span class="muted">' + esc(k.benchmark) + '</span></td><td>' + esc(k.gamingRisk) + '</td></tr>';
       }).join('') + '</tbody></table></div></section>' +
-      (rejected.length ? '<section class="panel"><div class="panel__head"><h2>Considered, not selected</h2></div><div class="table-wrap" tabindex="0" role="region" aria-label="Rejected metrics"><table class="framework"><thead><tr><th scope="col">Metric</th><th scope="col">Why not</th></tr></thead><tbody>' +
-        rejected.map(function (k) { return '<tr><th scope="row"><a href="#/kpi/' + k.id + '">' + esc(k.name) + '</a><span class="small">' + esc(k.definition) + '</span></th><td>' + esc(k.rejectedReason || '') + '</td></tr>'; }).join('') +
-        '</tbody></table></div></section>' : '') +
       '<p class="small muted">Left out on purpose: lines of code, and any individual or per-person metric.</p>';
   }
 

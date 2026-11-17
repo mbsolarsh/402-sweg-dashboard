@@ -11,7 +11,7 @@ A clickable HTML prototype of the 402 SWEG metrics dashboard. It runs on sample 
 | **Leadership view** (default) | High-level viewers | Status tiles, a teams × KPIs grid (alphabetical, not ranked), and only the **top 3 KPIs**: sprint commitment, lead time, recovery time |
 | **Team lead view** (sidebar: All teams, or one team) | Team leads, PMs | The full KPI set (adds cycle time, change failure rate, pipeline pass rate, coverage, escaped defects, review turnaround, team pulse), for all teams or one team |
 | **KPI detail** (click any KPI) | Everyone | The KPI row, a line chart comparing teams (pick which), a data table, and the full framework entry |
-| **KPI framework** | PO, report | The framework table from the brief, plus "Considered, not selected" with reasons |
+| **KPI framework** | PO, report | The framework table from the brief |
 
 **Filter bar** (top of every dashboard page; the Team filter appears only in the team lead view): Team · Time range (last 3 / 6 / 12 sprints) · Compare to (previous period or none). There is no per-person filter, by design.
 
@@ -33,7 +33,7 @@ You shouldn't need to touch `app.js`, `charts.js` or the HTML.
 | To change… | Edit |
 |---|---|
 | Which KPIs appear, their definitions, formulas, targets, gaming risks | `js/kpis.js` |
-| Choose / reject a KPI | `enabled: true/false` in `js/kpis.js` (add `rejectedReason` when false) |
+| Choose / reject a KPI | `enabled: true/false` in `js/kpis.js` (add `rejectedReason` when false; it is kept for the record, not shown on the dashboard) |
 | Team names, sprint dates, KPI categories, time ranges | `js/config.js` |
 | Real or hand-made numbers instead of generated ones | `data/team-data.js` |
 | Colors, fonts, spacing (design system) | the tokens at the top of `css/styles.css` (one block for dark, one for light) |
