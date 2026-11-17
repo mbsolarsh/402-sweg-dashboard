@@ -4,8 +4,9 @@
  * data/team-data.js.
  *
  * Views (URL hash):
- *   #/dashboard               all teams combined (leadership view)
- *   #/dashboard?team=<id>     one team (team leader view)
+ *   #/dashboard               leadership view: all teams combined, top 3 KPIs only
+ *   #/dashboard?view=lead     team lead view: all teams combined, full KPI set
+ *   #/dashboard?team=<id>     team lead view: one team, full KPI set
  *   #/kpi/<kpiId>?team=<id>   drill-down: one KPI, compare teams, full definition
  *   #/framework               the KPI framework table
  *
@@ -46,6 +47,24 @@
   }
   function lastNum(arr) { for (var i = arr.length - 1; i >= 0; i--) if (isNum(arr[i])) return { v: arr[i], i: i }; return null; }
   function seriesFor(teamId, kpiId) { return teamId ? D.series[teamId][kpiId] : D.group(kpiId); }
+
+  // ---------- audiences ----------
+  // 'leadership' = high-level view (top 3 KPIs). 'lead' = team lead view (everything).
+  function viewOf(params, kpi) {
+    var wantsLead = params.view === 'lead' || (params.team && teamById[params.team]);
+    if (kpi && !inView(kpi, 'leadership')) wantsLead = true;
+    return wantsLead ? 'lead' : 'leadership';
+  }
+  function inView(k, view) {
+    var a = k.audience || ['teamlead'];
+    return a.indexOf(view === 'lead' ? 'teamlead' : 'leadership') > -1;
+  }
+  function kpisFor(view) {
+    var list = KPIS.filter(function (k) { return inView(k, view); });
+    if (view !== 'lead') list.sort(function (a, b) { return (a.leadershipRank || 99) - (b.leadershipRank || 99); });
+    return list;
+  }
+  function viewQuery(teamId, view) { return teamId ? '?team=' + teamId : (view === 'lead' ? '?view=lead' : ''); }
 
   // ---------- formatting ----------
   var UNIT = { percent: '%', days: 'days', hours: 'hrs', perWeek: '/ wk', count: '', score: '/ 5' };
@@ -123,10 +142,10 @@
   function filterBar(teamId, opts) {
     opts = opts || {};
     return '<div class="filters" role="group" aria-label="Filters">' +
-      '<label class="field"><span class="field__label">Team</span><select data-action="team">' +
+      (opts.hideTeam ? '' : '<label class="field"><span class="field__label">Team</span><select data-action="team">' +
         '<option value="">All teams (combined)</option>' +
         C.teams.map(function (t) { return '<option value="' + t.id + '"' + (t.id === teamId ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') +
-      '</select></label>' +
+      '</select></label>') +
       '<label class="field"><span class="field__label">Time range</span><select data-action="range">' +
         C.ranges.map(function (r) { return '<option value="' + r.id + '"' + (r.id === state.rangeId ? ' selected' : '') + '>' + esc(r.label) + '</option>'; }).join('') +
       '</select></label>' +
@@ -152,7 +171,7 @@
     var s = stats(k, teamId);
     var p = parts(k, s.cur);
     var pair = k.pairedWith && kpiById[k.pairedWith];
-    var q = teamId ? '?team=' + teamId : '';
+    var q = viewQuery(teamId, opts.view);
     var ps = windowPeriods();
     var chart = CH.barTrend({
       labels: ps.map(function (x) { return x.short; }),
@@ -188,25 +207,25 @@
       '</article>';
   }
 
-  function summary(teamId) {
+  function summary(teamId, list) {
     var c = { ok: 0, watch: 0, off: 0 };
-    KPIS.forEach(function (k) { var s = stats(k, teamId).status; if (c[s.key] != null) c[s.key]++; });
+    list.forEach(function (k) { var s = stats(k, teamId).status; if (c[s.key] != null) c[s.key]++; });
     function tile(st, n) {
-      return '<li class="stat stat--' + st.key + '"><span class="stat__n">' + n + '</span>' + badge(st) + '<span class="stat__of">of ' + KPIS.length + ' KPIs</span></li>';
+      return '<li class="stat stat--' + st.key + '"><span class="stat__n">' + n + '</span>' + badge(st) + '<span class="stat__of">of ' + list.length + ' KPIs</span></li>';
     }
     return '<ul class="stats" aria-label="KPI status summary">' + tile(STATUS.ok, c.ok) + tile(STATUS.watch, c.watch) + tile(STATUS.off, c.off) + '</ul>';
   }
 
-  function teamsMatrix() {
+  function teamsMatrix(list) {
     return '<section class="panel" aria-labelledby="matrix-h">' +
       '<div class="panel__head"><h2 id="matrix-h">Teams at a glance</h2>' +
       '<p class="muted">Average for ' + esc(range().label.toLowerCase()) + '. Teams are listed alphabetically: this is not a ranking.</p></div>' +
       '<div class="table-wrap" tabindex="0" role="region" aria-label="Teams at a glance"><table class="matrix"><thead><tr><th scope="col">Team</th>' +
-      KPIS.map(function (k) { return '<th scope="col"><abbr title="' + esc(k.name) + '">' + esc(k.short) + '</abbr></th>'; }).join('') +
+      list.map(function (k) { return '<th scope="col"><abbr title="' + esc(k.name) + '">' + esc(k.short) + '</abbr></th>'; }).join('') +
       '</tr></thead><tbody>' +
       C.teams.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).map(function (t) {
         return '<tr><th scope="row"><a href="#/dashboard?team=' + t.id + '">' + esc(t.name) + '</a><span class="muted small">' + esc(t.project || '') + '</span></th>' +
-          KPIS.map(function (k) {
+          list.map(function (k) {
             var s = stats(k, t.id);
             return '<td class="cell cell--' + s.status.key + '"><a href="#/kpi/' + k.id + '?team=' + t.id + '" aria-label="' + esc(t.name + ', ' + k.name + ': ' + fmt(k, s.cur) + ', ' + s.status.label) + '">' +
               '<span class="cell__icon" aria-hidden="true">' + s.status.icon + '</span>' + esc(fmt(k, s.cur)) + '</a></td>';
@@ -215,13 +234,13 @@
       '</tbody></table></div></section>';
   }
 
-  function categoryBlocks(teamId) {
+  function categoryBlocks(teamId, list, view) {
     return C.categories.map(function (cat) {
-      var ks = KPIS.filter(function (k) { return k.category === cat.id; });
+      var ks = list.filter(function (k) { return k.category === cat.id; });
       if (!ks.length) return '';
       return '<section class="cat" aria-labelledby="cat-' + cat.id + '">' +
         '<div class="cat__head"><h2 id="cat-' + cat.id + '">' + esc(cat.label) + '</h2><p class="muted">' + esc(cat.blurb) + '</p></div>' +
-        ks.map(function (k) { return kpiRow(k, teamId); }).join('') +
+        ks.map(function (k) { return kpiRow(k, teamId, { view: view }); }).join('') +
         '</section>';
     }).join('');
   }
@@ -230,29 +249,47 @@
   function viewDashboard(params) {
     var teamId = params.team && teamById[params.team] ? params.team : null;
     var team = teamId ? teamById[teamId] : null;
+    var view = viewOf(params);
+    var list = kpisFor(view);
+    if (view === 'leadership') {
+      return '<header class="page-head">' +
+          '<p class="crumbs">Leadership view</p>' +
+          '<h1 tabindex="-1">All teams</h1>' +
+          '<p class="muted">' + C.teams.length + ' teams combined. Are we doing the work we want to do, effectively?</p>' +
+        '</header>' +
+        filterBar(null, { hideTeam: true }) +
+        summary(null, list) +
+        teamsMatrix(list) +
+        chartLegend() +
+        '<section class="cat" aria-labelledby="top-h"><div class="cat__head"><h2 id="top-h">Top ' + list.length + ' KPIs</h2>' +
+          '<p class="muted">The measures leadership asked to see first. Team leads see the full set.</p></div>' +
+          list.map(function (k) { return kpiRow(k, null, { view: view }); }).join('') +
+        '</section>';
+    }
     return '<header class="page-head">' +
-        '<p class="crumbs">' + (team ? '<a href="#/dashboard">All teams</a> <span aria-hidden="true">/</span> Team view' : 'Leadership view') + '</p>' +
+        '<p class="crumbs">' + (team ? '<a href="#/dashboard?view=lead">Team lead view</a> <span aria-hidden="true">/</span> ' + esc(team.name) : 'Team lead view') + '</p>' +
         '<h1 tabindex="-1">' + (team ? esc(team.name) : 'All teams') + '</h1>' +
-        '<p class="muted">' + (team ? esc(team.project || '') : C.teams.length + ' teams combined') + '</p>' +
+        '<p class="muted">' + (team ? esc(team.project || '') : C.teams.length + ' teams combined, full KPI set') + '</p>' +
       '</header>' +
       filterBar(teamId) +
-      summary(teamId) +
-      (team ? '' : teamsMatrix()) +
+      summary(teamId, list) +
+      (team ? '' : teamsMatrix(list)) +
       chartLegend() +
-      categoryBlocks(teamId);
+      categoryBlocks(teamId, list, view);
   }
 
   function viewKpi(kpiId, params) {
     var k = kpiById[kpiId];
     if (!k) return viewNotFound();
     var teamId = params.team && teamById[params.team] ? params.team : null;
+    var view = viewOf(params, k);
     if (state.chartKpi !== kpiId + '|' + (teamId || '')) {
       state.chartTeams = teamId ? [teamId, 'group'] : C.teams.map(function (t) { return t.id; }).concat(['group']);
       state.chartKpi = kpiId + '|' + (teamId || '');
     }
     var pair = k.pairedWith && kpiById[k.pairedWith];
     var cat = C.categories.find(function (c) { return c.id === k.category; });
-    var q = teamId ? '?team=' + teamId : '';
+    var q = viewQuery(teamId, view);
     function chip(id, label, i) {
       var cls = id === 'group' ? 'sgroup' : 's' + (i % 6 + 1);
       var dash = id === 'group' ? '' : C.seriesDashes[i % C.seriesDashes.length];
@@ -262,12 +299,12 @@
     function fact(t, d) { return d ? '<dt>' + esc(t) + '</dt><dd>' + esc(d) + '</dd>' : ''; }
 
     return '<header class="page-head">' +
-        '<p class="crumbs"><a href="#/dashboard' + q + '">' + esc(scopeName(teamId)) + '</a> <span aria-hidden="true">/</span> ' + esc(cat ? cat.label : '') + '</p>' +
+        '<p class="crumbs"><a href="#/dashboard' + q + '">' + esc(view === 'lead' ? (teamId ? scopeName(teamId) : 'Team lead view') : 'Leadership view') + '</a> <span aria-hidden="true">/</span> ' + esc(cat ? cat.label : '') + '</p>' +
         '<h1 tabindex="-1">' + esc(k.name) + (k.enabled === false ? ' <span class="pill">Not selected</span>' : '') + '</h1>' +
       '</header>' +
-      filterBar(teamId) +
+      filterBar(teamId, { hideTeam: view !== 'lead' }) +
       chartLegend() +
-      kpiRow(k, teamId, { noLink: true }) +
+      kpiRow(k, teamId, { noLink: true, view: view }) +
       '<div class="detail-grid">' +
         '<section class="panel" aria-labelledby="cmp-h"><div class="panel__head"><h2 id="cmp-h">Compare teams</h2>' +
           '<p class="muted">Each sprint, ' + esc(range().label.toLowerCase()) + '. Lines are not smoothed.</p></div>' +
@@ -328,11 +365,11 @@
     var rejected = ALL.filter(function (k) { return k.enabled === false; });
     function catName(k) { var c = C.categories.find(function (x) { return x.id === k.category; }); return c ? c.label : ''; }
     return '<header class="page-head"><p class="crumbs">Reference</p><h1 tabindex="-1">KPI framework</h1>' +
-      '<p class="muted">' + KPIS.length + ' recommended KPIs, balanced across speed, quality, stability and team health. All are measured per team, never per person.</p></header>' +
+      '<p class="muted">' + KPIS.length + ' recommended KPIs, balanced across speed, quality, stability and team health. Leadership sees the top ' + kpisFor('leadership').length + '; team leads see all of them. All are measured per team, never per person.</p></header>' +
       '<section class="panel"><div class="table-wrap" tabindex="0" role="region" aria-label="KPI framework"><table class="framework"><thead><tr>' +
       cols.map(function (c) { return '<th scope="col">' + c + '</th>'; }).join('') + '</tr></thead><tbody>' +
       KPIS.map(function (k) {
-        return '<tr><th scope="row"><a href="#/kpi/' + k.id + '">' + esc(k.name) + '</a><span class="tag">' + esc(catName(k)) + '</span><span class="small">' + esc(k.definition) + '</span></th>' +
+        return '<tr><th scope="row"><a href="#/kpi/' + k.id + '">' + esc(k.name) + '</a><span class="tag">' + esc(catName(k)) + '</span><span class="tag">' + (inView(k, 'leadership') ? 'Leadership + team lead' : 'Team lead') + '</span><span class="small">' + esc(k.definition) + '</span></th>' +
           '<td>' + esc(k.formula) + '</td><td>' + esc(k.dataSource) + '</td><td>' + esc(k.question) + '</td>' +
           '<td><strong>' + esc(targetText(k)) + '</strong><br><span class="muted">' + esc(k.benchmark) + '</span></td><td>' + esc(k.gamingRisk) + '</td></tr>';
       }).join('') + '</tbody></table></div></section>' +
@@ -363,9 +400,10 @@
 
   function updateNav(r) {
     var team = r.params.team || '';
+    var view = viewOf(r.params);
     document.querySelectorAll('.side-nav a').forEach(function (a) {
       var route = a.getAttribute('data-route'), t = a.getAttribute('data-team');
-      var on = route === r.name && (route !== 'dashboard' || (t || '') === (r.name === 'dashboard' ? team : '__'));
+      var on = route === r.name && (route !== 'dashboard' || ((a.getAttribute('data-view') || 'leadership') === view && (t || '') === team));
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
   }
@@ -408,7 +446,7 @@
     else if (action === 'compare') { state.compare = t.value; save('compare'); render(); }
     else if (action === 'team') {
       var base = r.name === 'kpi' ? '#/kpi/' + r.id : '#/dashboard';
-      location.hash = base + (t.value ? '?team=' + t.value : '');
+      location.hash = base + (t.value ? '?team=' + t.value : '?view=lead');
     } else if (action === 'series') {
       state.chartTeams = Array.prototype.filter.call(document.querySelectorAll('[data-action="series"]'), function (b) { return b.checked; })
         .map(function (b) { return b.value; });
@@ -427,7 +465,7 @@
   document.getElementById('brand-title').textContent = C.title;
   document.getElementById('brand-org').textContent = C.orgName;
   document.getElementById('team-links').innerHTML = C.teams.map(function (t) {
-    return '<li><a href="#/dashboard?team=' + t.id + '" data-route="dashboard" data-team="' + t.id + '">' + esc(t.name) + '</a></li>';
+    return '<li><a href="#/dashboard?team=' + t.id + '" data-route="dashboard" data-view="lead" data-team="' + t.id + '">' + esc(t.name) + '</a></li>';
   }).join('');
   if (!C.sampleData) document.getElementById('sample-note').hidden = true;
   applyTheme();

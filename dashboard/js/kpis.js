@@ -10,6 +10,8 @@
  *   gamingRisk       -> Risk of gaming, and the guard against it
  *
  * Display fields:
+ *   audience     who sees it: 'leadership' (high-level view) and/or 'teamlead'.
+ *                Leadership shows only the Product Owner's top 3, ordered by leadershipRank.
  *   enabled      true = shown on the dashboard. Set false for metrics you
  *                considered and rejected (they appear under "Considered,
  *                not selected" on the Framework page with rejectedReason).
@@ -28,7 +30,8 @@
 window.DASH_KPIS = [
   {
     id: 'delivery-frequency',
-    enabled: true,
+    enabled: false,
+    rejectedReason: 'Product Owner interview (Dexter): 402 SWEG is R&D and hands off for maintenance, so it does not "deliver" on a cycle. Not applicable.',
     name: 'Delivery frequency',
     short: 'Deliveries',
     category: 'speed',
@@ -47,11 +50,12 @@ window.DASH_KPIS = [
   {
     id: 'lead-time',
     enabled: true,
+    audience: ['leadership', 'teamlead'], leadershipRank: 2,
     name: 'Lead time for changes',
     short: 'Lead time',
     category: 'speed',
-    definition: 'Time from code commit to that change being in a delivered build.',
-    formula: 'Median(delivery time − commit time) across changes in period (days)',
+    definition: 'Time from a change being identified to that change being in a branch or implemented in the code.',
+    formula: 'Median(merge or implementation date − date change was identified) across changes in period (days)',
     unit: 'days', decimals: 1,
     direction: 'lower', target: 7, warn: 14,
     dataSource: 'GitLab / Azure DevOps commits and pipeline runs',
@@ -64,8 +68,8 @@ window.DASH_KPIS = [
   },
   {
     id: 'cycle-time',
-    enabled: false,
-    rejectedReason: 'Overlaps with lead time at the leadership level. Candidate for a stage-by-stage drill-down later.',
+    enabled: true,
+    audience: ['teamlead'],
     name: 'Cycle time',
     short: 'Cycle time',
     category: 'speed',
@@ -103,6 +107,7 @@ window.DASH_KPIS = [
   {
     id: 'sprint-completion',
     enabled: true,
+    audience: ['leadership', 'teamlead'], leadershipRank: 1,
     name: 'Sprint commitment met',
     short: 'Commitment',
     category: 'speed',
@@ -121,6 +126,7 @@ window.DASH_KPIS = [
   {
     id: 'pipeline-pass-rate',
     enabled: true,
+    audience: ['teamlead'],
     name: 'CI/CD pipeline pass rate',
     short: 'Pipeline pass',
     category: 'quality',
@@ -139,6 +145,7 @@ window.DASH_KPIS = [
   {
     id: 'test-coverage',
     enabled: true,
+    audience: ['teamlead'],
     name: 'Unit test coverage',
     short: 'Coverage',
     category: 'quality',
@@ -157,6 +164,7 @@ window.DASH_KPIS = [
   {
     id: 'escaped-defects',
     enabled: true,
+    audience: ['teamlead'],
     name: 'Escaped defect rate',
     short: 'Escaped defects',
     category: 'quality',
@@ -175,6 +183,7 @@ window.DASH_KPIS = [
   {
     id: 'change-failure-rate',
     enabled: true,
+    audience: ['teamlead'],
     name: 'Change failure rate',
     short: 'Change failures',
     category: 'stability',
@@ -193,6 +202,7 @@ window.DASH_KPIS = [
   {
     id: 'recovery-time',
     enabled: true,
+    audience: ['leadership', 'teamlead'], leadershipRank: 3,
     name: 'Recovery time',
     short: 'Recovery',
     category: 'stability',
@@ -211,7 +221,7 @@ window.DASH_KPIS = [
   {
     id: 'rework-rate',
     enabled: false,
-    rejectedReason: 'Overlaps with change failure rate and depends on consistent work item labelling across teams.',
+    rejectedReason: 'Product Owner interview (Dexter): not applicable to R&D work. Also overlaps with change failure rate and depends on consistent work item labelling.',
     name: 'Rework rate',
     short: 'Rework',
     category: 'stability',
@@ -249,6 +259,7 @@ window.DASH_KPIS = [
   {
     id: 'review-turnaround',
     enabled: true,
+    audience: ['teamlead'],
     name: 'Code review turnaround',
     short: 'Review time',
     category: 'health',
@@ -286,6 +297,7 @@ window.DASH_KPIS = [
   {
     id: 'team-pulse',
     enabled: true,
+    audience: ['teamlead'],
     name: 'Team health pulse',
     short: 'Team pulse',
     category: 'health',
